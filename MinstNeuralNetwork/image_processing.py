@@ -1,6 +1,5 @@
 import os.path
 import cv2
-import matplotlib.pyplot as plt
 import numpy
 from PIL import Image
 
@@ -8,24 +7,24 @@ image_size = 28
 
 
 def image_process(path):
-    image = load_sample_image(path)
-    image = reformat_image(image)
-    image = inverse_image(image)
-    image = zero_to_ones(image)
-    x_train = matrix_to_vector(image)
+    img = load_sample_image(path)
+    img = reformat_image(img)
+    img = inverse_image(img)
+    img = zero_to_ones(img)
+    x_train = matrix_to_vector(img)
     return x_train
 
 
 def load_sample_image(path):
     file = os.path.expanduser(path)
-    image = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-    return image
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    return img
 
 
-def inverse_image(image):
+def inverse_image(img):
     for i, j in range(image_size, image_size):
-        image[i, j] = 255 - image[i, j]
-    return image
+        img[i, j] = 255 - img[i, j]
+    return img
 
 
 # Format Image to 28x28 centered around 0
@@ -51,7 +50,3 @@ def convert_to_grey_levels(image):
 def zero_to_ones(image):
     image[image == 0] = 1
     return image
-
-
-image = load_sample_image("~/Desktop/mes_chiffres/1.jpg")
-print(image)
