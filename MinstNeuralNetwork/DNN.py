@@ -90,9 +90,32 @@ class DeepNeuralNetwork:
         return change_w
 
     # Compute the Stochastic Gradient Descent
-    def update_network_parameters(self, weight_changes):
+    def StochasticGradient(self, weight_changes):
         for key, value in weight_changes.items():
             self.params[key] -= self.l_rate * value
+    
+    # Compute Momentum
+    def Momentum(self, changes_to_w):
+        i = 1
+        eta = 0.9
+        previousvalue = {'W1':None,'W2':None,'W3':None}
+        for key, value in changes_to_w.items():
+            if i == 1:
+                self.params[key] -= self.l_rate * value
+                if previousvalue['W3'] is not None:
+                    self.params[key] += eta * previousvalue['W3']
+                previousvalue['W3'] = self.params[key]
+            if i == 2:
+                self.params[key] -= self.l_rate * value
+                if previousvalue['W2'] is not None:
+                    self.params[key] += eta * previousvalue['W2']
+                previousvalue['W2'] = self.params[key]
+            if i == 3:
+                self.params[key] -= self.l_rate * value
+                if previousvalue['W1'] is not None:
+                    self.params[key] += eta * previousvalue['W1']
+                previousvalue['W1'] = self.params[key]
+            i += 1        
 
     # Compute Accuracy
     def accuracy(self, x_val, y_val):
@@ -114,7 +137,7 @@ class DeepNeuralNetwork:
             for x, y in zip(x_train, y_train):
                 output = self.forward_pass(x)
                 weight_change = self.backward_pass(y, output)
-                self.update_network_parameters(weight_change)
+                self.StochasticGradient(weight_change)
 
             accuracy = self.accuracy(x_val, y_val)
             accuracy_list.append(accuracy)
