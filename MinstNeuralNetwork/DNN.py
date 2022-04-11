@@ -6,7 +6,7 @@ from keras.utils.np_utils import to_categorical
 
 from MinstNeuralNetwork.tools.activation_functions import sigmoid, softmax, softsign
 from MinstNeuralNetwork.tools.other import create_solution
-from image_processing import image_process
+from MinstNeuralNetwork.tools.image_processing import image_process
 
 # Load data set from keras.minst
 (x_train, y_train), (x_val, y_val) = mnist.load_data()
@@ -25,11 +25,11 @@ x_val = np.reshape(x_val, [-1, input_size])
 x_val = x_val.astype('float32') / 255
 
 accuracy_list = []
-epoch_list = [i for i in range(1, 11)]
+epoch_list = [i for i in range(1, 6)]
 
 
 class DeepNeuralNetwork:
-    def __init__(self, sizes, epochs=10, l_rate=0.1):
+    def __init__(self, sizes, epochs=5, l_rate=0.1):
         self.sizes = sizes
         self.epochs = epochs
         self.l_rate = l_rate
