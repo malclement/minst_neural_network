@@ -9,7 +9,9 @@ image_size = 28
 def image_process(path):
     img = load_sample_image(path)
     img = reformat_image(img)
-    return img
+    vect = matrix_to_vector(img)
+    x_train = vect.astype('float32') / 255
+    return x_train
 
 
 def load_sample_image(path):
@@ -48,5 +50,3 @@ def convert_to_grey_levels(image):
 def zero_to_ones(image):
     image[image == 0] = 1
     return image
-
-

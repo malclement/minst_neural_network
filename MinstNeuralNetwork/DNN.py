@@ -4,12 +4,12 @@ import time
 from keras.datasets import mnist
 from keras.utils.np_utils import to_categorical
 
-from MinstNeuralNetwork.tools.activation_functions import sigmoid, softmax
-from MinstNeuralNetwork.tools.other import most_frequent
+from MinstNeuralNetwork.tools.activation_functions import sigmoid, softmax, softsign
+from MinstNeuralNetwork.tools.other import create_solution
 from image_processing import image_process
 
+# Load data set from keras.minst
 (x_train, y_train), (x_val, y_val) = mnist.load_data()
-
 
 # convert to one-hot vector
 y_train = to_categorical(y_train)
@@ -25,11 +25,11 @@ x_val = np.reshape(x_val, [-1, input_size])
 x_val = x_val.astype('float32') / 255
 
 accuracy_list = []
-epoch_list = [i for i in range(1, 1)]
+epoch_list = [i for i in range(1, 11)]
 
 
 class DeepNeuralNetwork:
-    def __init__(self, sizes, epochs=1, l_rate=0.6):
+    def __init__(self, sizes, epochs=10, l_rate=0.1):
         self.sizes = sizes
         self.epochs = epochs
         self.l_rate = l_rate
@@ -63,11 +63,11 @@ class DeepNeuralNetwork:
 
         # hidden layer 1 to hidden layer 2
         params['Z2'] = np.dot(params["W2"], params['A1'])
-        params['A2'] = sigmoid(params['Z2'])
+        params['A2'] = softsign(params['Z2'])
 
         # hidden layer 2 to output layer
         params['Z3'] = np.dot(params["W3"], params['A2'])
-        params['A3'] = softmax(params['Z3'])
+        params['A3'] = softsign(params['Z3'])
 
         return params['A3']
 
@@ -80,25 +80,25 @@ class DeepNeuralNetwork:
         change_w['W3'] = np.outer(error, params['A2'])
 
         # calculate w2
-        error = np.dot(params['W3'].T, error) * sigmoid(params['Z2'], derivative=True)
+        error = np.dot(params['W3'].T, error) * softsign(params['Z2'], derivative=True)
         change_w['W2'] = np.outer(error, params['A1'])
 
         # calculate w1
-        error = np.dot(params['W2'].T, error) * sigmoid(params['Z1'], derivative=True)
+        error = np.dot(params['W2'].T, error) * softsign(params['Z1'], derivative=True)
         change_w['W1'] = np.outer(error, params['A0'])
 
         return change_w
 
     # Compute the Stochastic Gradient Descent
-    def StochasticGradient(self, weight_changes):
+    def stochastic_gradient(self, weight_changes):
         for key, value in weight_changes.items():
             self.params[key] -= self.l_rate * value
-    
+
     # Compute Momentum
-    def Momentum(self, changes_to_w):
+    def momentum(self, changes_to_w):
         i = 1
         eta = 0.9
-        previousvalue = {'W1':None,'W2':None,'W3':None}
+        previousvalue = {'W1': None, 'W2': None, 'W3': None}
         for key, value in changes_to_w.items():
             if i == 1:
                 self.params[key] -= self.l_rate * value
@@ -115,9 +115,10 @@ class DeepNeuralNetwork:
                 if previousvalue['W1'] is not None:
                     self.params[key] += eta * previousvalue['W1']
                 previousvalue['W1'] = self.params[key]
-            i += 1        
+            i += 1
 
-    # Compute Accuracy
+            # Compute Accuracy
+
     def accuracy(self, x_val, y_val):
         predictions = []
 
@@ -137,30 +138,35 @@ class DeepNeuralNetwork:
             for x, y in zip(x_train, y_train):
                 output = self.forward_pass(x)
                 weight_change = self.backward_pass(y, output)
-                self.StochasticGradient(weight_change)
+                self.stochastic_gradient(weight_change)
 
             accuracy = self.accuracy(x_val, y_val)
             accuracy_list.append(accuracy)
             print('Epoch: {0}, Time Spent: {1:.2f}s, Accuracy: {2:.2f}%'.format(
                 i + 1, time.time() - start_time, accuracy * 100))
-            # print(accuracy * 100)
-        self.test_on_personal_image("~/Desktop/mes_chiffres/1.jpg", 1)
 
     # Allow to use a trained DNN on a chosen image
     def test_on_personal_image(self, path, i):
+        start = time.time()
         x_train_image = image_process(path)
         output = self.forward_pass(x_train_image)
+        weight_change = self.backward_pass(create_solution(i), output)
+        self.stochastic_gradient(weight_change)
+        output = self.forward_pass(x_train_image)
         print(output)
-        print("for input = ", i)
-        print(np.argmax(output) + 1)
+        print("for input :", i, "  output is :", np.argmax(output))
+        print("time : ", time.time()-start)
 
     # Allow to use a trained DNN on a chosen image and process this image several times
-    def complete_image_test(self, path, epochs=10):
+    def complete_image_test(self, path, i, epochs=10):
         x_train_image = image_process(path)
         output = []
+        somme = [i for i in range(1, epochs + 1)]
         for i in range(epochs):
-            print(self.forward_pass(x_train_image))
-            print(np.argmax(self.forward_pass(x_train_image)))
-            output.append(np.argmax(self.forward_pass(x_train_image)) + 1)
-        result = most_frequent(output)
+            output.append((self.forward_pass(x_train_image)))
+        for i in range(epochs):
+            for j in range(len(output[0])):
+                somme[i] += output[i][j]
+        result = [i / epochs for i in output]
+        print("for input :", i, "  output is :", result)
         print(result)
